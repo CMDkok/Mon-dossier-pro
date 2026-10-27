@@ -65,12 +65,12 @@ main{max-width:none;padding:0}#cvSheet{padding:0;box-shadow:none;min-height:0}
 <div class="card no-print">
 <h2>2. Remplis tes informations</h2>
 <div class="grid">
-<div><label>Nom complet</label><input id="nom"></div>
-<div><label>Métier visé</label><input id="metier"></div>
-<div><label>Téléphone</label><input id="tel"></div>
-<div><label>Email</label><input id="email"></div>
-<div><label>Ville</label><input id="ville"></div>
-<div><label>LinkedIn (facultatif)</label><input id="linkedin"></div>
+<div><label>Nom complet</label><input id="nom" placeholder="ex : Aïcha Mensah"></div>
+<div><label>Métier visé</label><input id="metier" placeholder="ex : Vendeuse en boutique"></div>
+<div><label>Téléphone</label><input id="tel" placeholder="ex : 90 00 00 00"></div>
+<div><label>Email</label><input id="email" placeholder="ex : aicha.mensah@exemple.com"></div>
+<div><label>Ville</label><input id="ville" placeholder="ex : Lomé"></div>
+<div><label>LinkedIn (facultatif)</label><input id="linkedin" placeholder="ex : linkedin.com/in/tonnom"></div>
 </div>
 <div id="civilFields">
 <label>Date de naissance</label><input id="naissanceDate" placeholder="ex : 12 mars 1998">
@@ -96,6 +96,7 @@ main{max-width:none;padding:0}#cvSheet{padding:0;box-shadow:none;min-height:0}
 <input type="file" id="photoFile" accept="image/*">
 <div id="photoWarn" class="warn" style="display:none">Attention : la norme locale de ce modèle exclut la photo. Si tu la mets quand même, le CV sortira avec photo, mais ce ne sera pas conforme à la norme du pays. Pour un CV avec photo, choisis un modèle Francophone (ou Allemand).</div>
 <button type="button" onclick="fillExample()">Remplir un exemple</button>
+<button type="button" class="sec" onclick="clearAll()">Effacer tout</button>
 <button type="button" id="btnImprove" onclick="improveOrTranslate()">Améliorer mon texte</button>
 <div id="tradNote" class="note" style="display:none">Traduction : sur ce modèle, le bouton traduit ton texte français vers la langue du modèle grâce au service public gratuit MyMemory, quand la connexion le permet, puis le reformule de façon professionnelle. Ton texte est envoyé à ce service externe gratuit pour la traduction.</div>
 <div id="tradWarn" class="trad-warn" style="display:none"></div>
@@ -167,6 +168,12 @@ function fillExample(){
 var m=model();var e=EXAMPLES[m.lang]||EXAMPLES.fr;
 Object.keys(e).forEach(function(k){if(document.getElementById(k)) set(k,e[k]);});
 set('experiences',e.experiences);set('formations',e.formations);set('competences',e.competences);set('competencesInfo',e.competencesInfo);set('langues',e.langues);set('interets',e.interets);set('certifications',e.certifications);
+render();
+}
+function clearAll(){
+['nom','metier','tel','email','ville','linkedin','naissanceDate','naissanceLieu','nationalite','situation','profil','experiences','formations','competences','competencesInfo','langues','interets','certifications'].forEach(function(id){if(document.getElementById(id)) set(id,'');});
+photoURL='';var pf=document.getElementById('photoFile');if(pf) pf.value='';
+var w=document.getElementById('tradWarn');if(w){w.style.display='none';w.innerHTML='';}
 render();
 }
 function improveFr(text){
@@ -372,7 +379,7 @@ var r=new FileReader();r.onload=function(){photoURL=r.result;render();};r.readAs
 ['nom','metier','tel','email','ville','linkedin','naissanceDate','naissanceLieu','nationalite','situation','profil','experiences','formations','competences','competencesInfo','langues','interets','certifications'].forEach(function(id){
 var el=document.getElementById(id);if(el) el.addEventListener('input',render);
 });
-renderGallery();updateModelUI();fillExample();
+renderGallery();updateModelUI();render();
 </script>
 </body>
 </html>
