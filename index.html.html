@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon Dossier Pro CV</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f2f2f2;color:#111}
+header{background:#0f766e;color:#fff;padding:18px;text-align:center}
+header h1{margin:0;font-size:22px}header p{margin:6px 0 0;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:14px}
+.card{background:#fff;border-radius:10px;padding:14px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+button{border:0;border-radius:8px;padding:11px 14px;font-size:15px;cursor:pointer;background:#0f766e;color:#fff;width:100%;margin:6px 0}
+button.sec{background:#e5e7eb;color:#111}button.wa{background:#25D366;color:#fff}
+label{font-size:13px;font-weight:bold;display:block;margin:10px 0 4px}
+input,textarea,select{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:15px}
+textarea{min-height:70px}
+.model{border:2px solid #ddd;border-radius:10px;padding:10px;cursor:pointer;background:#fff}
+.model.sel{border-color:#0f766e;background:#ecfdf5}
+.model b{display:block}.model span{font-size:13px;color:#444}
+.warn{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px;font-size:13px;margin:10px 0}
+.trad-warn{background:#fee2e2;border:2px solid #ef4444;border-radius:8px;padding:10px;font-size:14px;margin:10px 0}
+.note{font-size:13px;color:#444;background:#f9fafb;border-radius:8px;padding:10px;margin:10px 0}
+footer{font-size:12px;color:#555;text-align:center;padding:16px}
+#cvSheet{background:#fff;color:#000;padding:22px;min-height:600px}
+.cv-fr-classique,.cv-fr-moderne{font-family:Georgia,serif}
+.cv-fr-moderne h4{color:#0f766e}
+.cv-ca-epure,.cv-ca-pro{font-family:Arial,sans-serif}
+.cv-ca-pro h4{color:#2563eb}
+.cv-us-ats,.cv-us-creatif{font-family:Arial,sans-serif}
+.cv-us-creatif h4{color:#b91c1c}
+.cv-de-1,.cv-de-2{font-family:Arial,sans-serif}
+.cv-name{font-size:26px;font-weight:900;text-transform:uppercase;margin:0}
+.cv-double{border-top:4px solid #000;border-bottom:1px solid #000;height:6px;margin:8px 0 12px}
+.cv-under{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px}
+.cv-under .right{text-align:right}
+.cv-photo{width:110px;height:130px;object-fit:cover;border:1px solid #999}
+.cv-photo-round{width:110px;height:110px;object-fit:cover;border-radius:50%}
+h4{font-size:16px;margin:18px 0 4px;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:3px}
+.cv-two{columns:2;column-gap:24px}
+.cv-two li{break-inside:avoid}
+ul{margin:6px 0;padding-left:20px}
+.bar{display:flex;gap:3px;margin:3px 0 8px}.seg{width:26px;height:10px;background:#ddd}.seg.on{background:#000}
+.cv-table{width:100%;border-collapse:collapse}.cv-table td{vertical-align:top;padding:4px 8px 4px 0}
+.cv-table td.d{white-space:nowrap;font-weight:bold;width:150px}
+.sig{margin-top:24px;display:flex;justify-content:space-between}
+@media print{
+body{background:#fff}.no-print{display:none!important}
+main{max-width:none;padding:0}#cvSheet{padding:0;box-shadow:none;min-height:0}
+}
+</style>
+</head>
+<body>
+<header class="no-print"><h1>Mon Dossier Pro CV</h1><p>Crée ton CV, choisis ton modèle, télécharge-le en PDF.</p></header>
+<main>
+<div class="card no-print">
+<h2>1. Choisis ton modèle</h2>
+<div class="grid" id="gallery"></div>
+<div id="modelNote" class="note"></div>
+</div>
+
+<div class="card no-print">
+<h2>2. Remplis tes informations</h2>
+<div class="grid">
+<div><label>Nom complet</label><input id="nom"></div>
+<div><label>Métier visé</label><input id="metier"></div>
+<div><label>Téléphone</label><input id="tel"></div>
+<div><label>Email</label><input id="email"></div>
+<div><label>Ville</label><input id="ville"></div>
+<div><label>LinkedIn (facultatif)</label><input id="linkedin"></div>
+</div>
+<div id="civilFields">
+<label>Date de naissance</label><input id="naissanceDate" placeholder="ex : 12 mars 1998">
+<label>Lieu de naissance</label><input id="naissanceLieu" placeholder="ex : Lomé">
+<label>Nationalité</label><input id="nationalite" placeholder="ex : Togolaise">
+<label>Situation matrimoniale</label><input id="situation" placeholder="ex : Célibataire">
+</div>
+<label>Profil</label><textarea id="profil" placeholder="2 à 3 phrases sur toi et ce que tu sais faire."></textarea>
+<label>Expériences — une par ligne : Poste | Lieu | Période | description</label>
+<textarea id="experiences" placeholder="Vendeuse | Boutique, Lomé | Janvier 2020 - Actuel | je vendais des habits et j'accueillais les clients"></textarea>
+<label>Formations — une par ligne : Diplôme | École | Année</label>
+<textarea id="formations" placeholder="Baccalauréat | Lycée, Lomé | 2019"></textarea>
+<label>Compétences (séparées par des virgules)</label><input id="competences" placeholder="Vente, Accueil des clients">
+<label>Compétences informatiques — ex : Word : Très bien, Excel : Bien</label><input id="competencesInfo" placeholder="Word : Très bien, Excel : Bien">
+<label>Langues — ex : Français : C2, Anglais : A2</label><input id="langues" placeholder="Français : C2, Anglais : A2">
+<label>Centres d'intérêt (séparés par des virgules)</label><input id="interets" placeholder="Musique, Sport">
+<label>Certifications (facultatif)</label><input id="certifications" placeholder="ex : Attestation de formation">
+<label>Photo</label>
+<div class="grid">
+<button type="button" class="sec" id="btnPhotoOui" onclick="setPhotoChoice(true)">Avec photo</button>
+<button type="button" class="sec" id="btnPhotoNon" onclick="setPhotoChoice(false)">Sans photo</button>
+</div>
+<input type="file" id="photoFile" accept="image/*">
+<div id="photoWarn" class="warn" style="display:none">Attention : la norme locale de ce modèle exclut la photo. Si tu la mets quand même, le CV sortira avec photo, mais ce ne sera pas conforme à la norme du pays. Pour un CV avec photo, choisis un modèle Francophone (ou Allemand).</div>
+<button type="button" onclick="fillExample()">Remplir un exemple</button>
+<button type="button" id="btnImprove" onclick="improveOrTranslate()">Améliorer mon texte</button>
+<div id="tradNote" class="note" style="display:none">Traduction : sur ce modèle, le bouton traduit ton texte français vers la langue du modèle grâce au service public gratuit MyMemory, quand la connexion le permet, puis le reformule de façon professionnelle. Ton texte est envoyé à ce service externe gratuit pour la traduction.</div>
+<div id="tradWarn" class="trad-warn" style="display:none"></div>
+<div class="note"><b>Création et aperçu gratuits.</b> Pour recevoir le PDF final (impression ou envoi par email) : 1 000 F, par Flooz ou TMoney, vérifié à la main avant envoi. Version d'essai gratuite, sans verrouillage technique.</div>
+</div>
+
+<div class="card no-print"><h2>3. Aperçu</h2><p style="font-size:13px;color:#444">Vérifie ton CV ci-dessous avant de le télécharger.</p></div>
+<div class="card" id="cvSheet"></div>
+
+<div class="card no-print">
+<button type="button" onclick="window.print()">Télécharger en PDF</button>
+<p style="font-size:14px"><b>Sur iPhone, dans Safari :</b> touche le bouton, puis dans le menu Partager choisis <b>Imprimer</b>, puis <b>Enregistrer dans Fichiers</b> / <b>Enregistrer au format PDF</b>. Vérifie ensuite le fichier dans Fichiers / Téléchargements.</p>
+<button type="button" class="wa" onclick="shareWA()">Partager sur WhatsApp</button>
+<p style="font-size:13px;color:#444">WhatsApp ne peut pas joindre un fichier tout seul : il envoie seulement un texte. Télécharge d'abord ton PDF, puis dans WhatsApp touche + puis Document et joins le PDF téléchargé.</p>
+</div>
+</main>
+<footer class="no-print">Mon Dossier Pro CV — Création et aperçu gratuits, 1 000 F pour le PDF final après paiement vérifié. La traduction, quand elle est utilisée, passe par le service externe gratuit MyMemory quand la connexion le permet. Les données d'exemple sont fictives.</footer>
+<script>
+var MODELS=[
+{id:'fr-classique',group:'fr',lang:'fr',name:'Francophone Classique',desc:'Format attendu au Togo / Afrique francophone. Avec photo et état civil complet.',cls:'cv-fr-classique'},
+{id:'fr-moderne',group:'fr',lang:'fr',name:'Francophone Moderne',desc:'Même format francophone, titres verts. Avec photo et état civil complet.',cls:'cv-fr-moderne'},
+{id:'ca-epure',group:'ca',lang:'fr',name:'Canadien Épuré',desc:'Vrai format canadien : 1-2 pages, sans photo, sans âge ni état civil.',cls:'cv-ca-epure'},
+{id:'ca-pro',group:'ca',lang:'fr',name:'Canadien Professionnel',desc:'Vrai format canadien : résumé, compétences avant expériences, antéchronologique.',cls:'cv-ca-pro'},
+{id:'us-ats',group:'us',lang:'en',name:'Américain Resume ATS',desc:'American Resume, 100% in English. 1 page, single column, no photo, no personal data. Dates like Mar 2020 – Present.',cls:'cv-us-ats'},
+{id:'us-creatif',group:'us',lang:'en',name:'Américain Resume Créatif',desc:'American Resume, 100% in English. Same US rules, with a colour accent.',cls:'cv-us-creatif'},
+{id:'de-1',group:'de',lang:'de',name:'Allemand Lebenslauf Classique',desc:'Lebenslauf auf Deutsch. Tabellarisch, Daten links, Foto oben rechts, Unterschrift unten.',cls:'cv-de-1'},
+{id:'de-2',group:'de',lang:'de',name:'Allemand Lebenslauf Moderne',desc:'Lebenslauf auf Deutsch. Même structure allemande, présentation modernisée.',cls:'cv-de-2'}
+];
+var cur='fr-classique';
+var photoOn=true, photoURL='';
+var HEADINGS={
+fr:{profil:'Profil professionnel',comp:'Compétences',info:'Compétences informatiques',exp:'Parcours professionnel',form:'Formation',lang:'Langues',inter:'Centres d\u2019intérêt',cert:'Certifications'},
+ca:{profil:'Résumé professionnel',comp:'Compétences',info:'Compétences informatiques',exp:'Expériences professionnelles',form:'Formation',lang:'Langues',inter:'Centres d\u2019intérêt',cert:'Certifications'},
+en:{profil:'Professional Summary',comp:'Skills',info:'IT Skills',exp:'Work Experience',form:'Education',lang:'Languages',inter:'Interests',cert:'Certifications'},
+de:{profil:'Kurzprofil',comp:'Kenntnisse',info:'EDV-Kenntnisse',exp:'Berufserfahrung',form:'Ausbildung / Studium',lang:'Sprachkenntnisse',inter:'Weitere Kenntnisse / Interessen',cert:'Zertifikate'}
+};
+var NOTES={
+fr:'Format attendu au Togo et en Afrique francophone : photo et état civil complet. Il n\u2019existe pas de format national togolais officiellement enregistré ; c\u2019est le format couramment attendu.',
+ca:'Vrai format canadien : sans photo, sans âge, sans état civil, résumé professionnel, compétences avant les expériences, ordre antéchronologique, verbes d\u2019action, résultats chiffrés.',
+en:'American Resume : 1 page, single column, no photo, no age, no date of birth, no nationality, no marital status. Name + city/state + phone + email + LinkedIn only.',
+de:'Deutscher Lebenslauf : tabellarisch, 1-2 Seiten, Daten links, Foto oben rechts, Geburtsdatum und Staatsangehörigkeit, Unterschrift und Datum unten.'
+};
+var EXAMPLES={
+fr:{nom:'AÏCHA MENSAH',metier:'Vendeuse en boutique',tel:'90 00 00 00',email:'aicha.mensah@exemple.com',ville:'Lomé',linkedin:'',naissanceDate:'12 mars 1998',naissanceLieu:'Lomé',nationalite:'Togolaise',situation:'Célibataire',profil:'Vendeuse expérimentée, accueillante et rigoureuse, habituée à la caisse et au conseil clients.',experiences:'Vendeuse | Boutique, Lomé | Janvier 2020 - Actuel | je vendais des habits et j\u2019accueillais les clients\nCaissière | Supermarché, Lomé | Mai 2018 - Décembre 2019 | je gérais la caisse et j\u2019encaissais les paiements',formations:'Baccalauréat | Lycée, Lomé | 2017',competences:'Vente, Accueil des clients, Gestion de la caisse',competencesInfo:'Word : Très bien, Excel : Bien',langues:'Français : C2, Anglais : A2, Éwé : C1',interets:'Musique, Sport, Voyages',certifications:''},
+en:{nom:'JORDAN MILLER',metier:'Sales Associate',tel:'+1 512 000 0000',email:'jordan.miller@example.com',ville:'Austin, TX',linkedin:'linkedin.com/in/jordanmiller',naissanceDate:'',naissanceLieu:'',nationalite:'',situation:'',profil:'Sales associate with 3 years of experience in retail, customer service and cash handling.',experiences:'Sales Associate | Clothing store, Austin | Mar 2022 - Present | Sold clothing, welcomed customers and processed 150+ payments per day',formations:'High School Diploma | Austin High School | 2019',competences:'Sales, Customer service, Cash handling',competencesInfo:'Word : Advanced, Excel : Intermediate',langues:'English : C2, Spanish : B1',interets:'Music, Sports, Travel',certifications:''},
+de:{nom:'JONAS WEBER',metier:'Verkäufer',tel:'+49 30 0000000',email:'jonas.weber@beispiel.de',ville:'Berlin',linkedin:'',naissanceDate:'12. März 1998',naissanceLieu:'Berlin',nationalite:'Deutsch',situation:'Ledig',profil:'Erfahrener Verkäufer mit guten Kenntnissen im Kundenservice und in der Kassenführung.',experiences:'Verkäufer | Bekleidungsgeschäft, Berlin | März 2022 - heute | Verkauf von Kleidung und Beratung von Kunden',formations:'Abitur | Gymnasium, Berlin | 2017',competences:'Verkauf, Kundenservice, Kassenführung',competencesInfo:'Word : Sehr gut, Excel : Gut',langues:'Deutsch : C2, Englisch : B1',interets:'Musik, Sport, Reisen',certifications:''}
+};
+function model(){return MODELS.filter(function(m){return m.id===cur})[0];}
+function get(id){return document.getElementById(id).value;}
+function set(id,v){document.getElementById(id).value=v||'';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setPhotoChoice(v){photoOn=v;document.getElementById('photoFile').style.display=v?'block':'none';render();}
+function renderGallery(){
+var g=document.getElementById('gallery');g.innerHTML='';
+MODELS.forEach(function(m){
+var d=document.createElement('div');d.className='model'+(m.id===cur?' sel':'');d.innerHTML='<b>'+esc(m.name)+'</b><span>'+esc(m.desc)+'</span>';
+d.onclick=function(){cur=m.id;updateModelUI();render();};g.appendChild(d);
+});
+}
+function updateModelUI(){
+var m=model();var grp=m.group;
+document.getElementById('modelNote').textContent=NOTES[grp]||'';
+document.getElementById('civilFields').style.display=(grp==='fr'||grp==='de')?'block':'none';
+document.getElementById('tradNote').style.display=(m.lang==='en'||m.lang==='de')?'block':'none';
+document.getElementById('btnImprove').textContent=(m.lang==='en'||m.lang==='de')?'Traduire et améliorer':'Améliorer mon texte';
+document.getElementById('photoWarn').style.display=(photoOn&&(grp==='ca'||grp==='us'))?'block':'none';
+}
+function fillExample(){
+var m=model();var e=EXAMPLES[m.lang]||EXAMPLES.fr;
+Object.keys(e).forEach(function(k){if(document.getElementById(k)) set(k,e[k]);});
+set('experiences',e.experiences);set('formations',e.formations);set('competences',e.competences);set('competencesInfo',e.competencesInfo);set('langues',e.langues);set('interets',e.interets);set('certifications',e.certifications);
+render();
+}
+function improveFr(text){
+if(!text) return text;
+var map={'je vendais':'Vente','j\u2019accueillais':'Accueil','j\u2019accueillais les clients':'Accueil des clients','je gérais':'Gestion','je gérais la caisse':'Gestion de la caisse','je préparais':'Préparation','je préparais les commandes':'Préparation des commandes','j\u2019encaissais':'Encaissement','j\u2019encaissais les paiements':'Encaissement des paiements','je répondais':'Réponse','je répondais aux clients':'Réponse aux clients'};
+var t=text.trim();var low=t.toLowerCase();
+for(var k in map){if(low.indexOf(k)===0) return map[k]+t.slice(k.length).replace(/^ des? /,' ').replace(/^ aux? /,' ');}
+if(low.indexOf('je ')===0) return t.slice(3).charAt(0).toUpperCase()+t.slice(4);
+if(low.indexOf('j\u2019')===0) return t.slice(2).charAt(0).toUpperCase()+t.slice(3);
+return t.charAt(0).toUpperCase()+t.slice(1);
+}
+function improveFrField(v){
+return v.split('\n').map(function(line){
+if(line.indexOf('|')>-1){var p=line.split('|');p[3]=p[3]?improveFr(p[3].trim()):'';return p.join(' | ');}
+return improveFr(line);
+}).join('\n');
+}
+function improveEn(t){
+if(!t) return t;var s=t.trim();
+s=s.replace(/^I was\s+/i,'').replace(/^I\s+/i,'');
+var map={'was selling':'Sold','selling':'Sold','welcomed':'Welcomed','managed':'Managed','processed':'Processed','answered':'Answered','prepared':'Prepared'};
+for(var k in map){if(s.toLowerCase().indexOf(k)===0) return map[k]+s.slice(k.length);}
+return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function improveDe(t){
+if(!t) return t;var s=t.trim();
+s=s.replace(/^ich\s+/i,'').replace(/^Ich\s+/i,'');
+return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function monthsEn(s){
+var m={'janvier':'Jan','février':'Feb','fevrier':'Feb','mars':'Mar','avril':'Apr','mai':'May','juin':'Jun','juillet':'Jul','août':'Aug','aout':'Aug','septembre':'Sep','octobre':'Oct','novembre':'Nov','décembre':'Dec','actuel':'Present','présent':'Present','present':'Present'};
+Object.keys(m).forEach(function(k){s=s.replace(new RegExp(k,'gi'),m[k]);});return s;
+}
+function monthsDe(s){
+var m={'janvier':'Januar','février':'Februar','fevrier':'Februar','mars':'März','avril':'April','mai':'Mai','juin':'Juni','juillet':'Juli','août':'August','aout':'August','septembre':'September','octobre':'Oktober','novembre':'November','décembre':'Dezember','actuel':'heute','présent':'heute','present':'heute'};
+Object.keys(m).forEach(function(k){s=s.replace(new RegExp(k,'gi'),m[k]);});return s;
+}
+function fmtPeriod(s,lang){if(lang==='en') return monthsEn(s);if(lang==='de') return monthsDe(s);return s;}
+function langBar(item){
+var lvl='';var name=item;
+var mm=item.match(/(A1|A2|B1|B2|C1|C2)/);if(mm) lvl=mm[1];
+var words={A1:1,A2:2,B1:3,B2:4,C1:5,C2:6};var n=words[lvl]||3;
+var label={A1:'A1 débutant',A2:'A2 élémentaire',B1:'B1 intermédiaire',B2:'B2 avancé',C1:'C1 avancé',C2:'C2 courant'}[lvl]||'';
+name=item.replace(/:.*$/,'').trim();
+var segs='';for(var i=1;i<=6;i++) segs+='<span class="seg'+(i<=n?' on':'')+'"></span>';
+return '<div><b>'+esc(name)+'</b> '+(lvl?esc(lvl)+' — '+esc(label):'')+'<div class="bar">'+segs+'</div></div>';
+}
+function splitList(v){return v.split(/[\n,]+/).map(function(x){return x.trim();}).filter(Boolean);}
+function render(){
+var m=model();var h=HEADINGS[m.group]||HEADINGS.fr;
+var nom=get('nom'),metier=get('metier');
+var contacts=[];
+if(get('ville')) contacts.push(esc(get('ville')));
+if(get('tel')) contacts.push(esc(get('tel')));
+if(get('email')) contacts.push(esc(get('email')));
+if(get('linkedin')) contacts.push(esc(get('linkedin')));
+var civil=[];
+if((m.group==='fr'||m.group==='de')&&get('naissanceDate')) civil.push((m.lang==='de'?'Geburtsdatum: ':'Né(e) le ')+esc(get('naissanceDate'))+(get('naissanceLieu')?' '+(m.lang==='de'?'in ':'à ')+esc(get('naissanceLieu')):''));
+if((m.group==='fr'||m.group==='de')&&get('nationalite')) civil.push((m.lang==='de'?'Staatsangehörigkeit: ':'Nationalité : ')+esc(get('nationalite')));
+if((m.group==='fr'||m.group==='de')&&get('situation')) civil.push((m.lang==='de'?'Familienstand: ':'')+esc(get('situation')));
+var photoHtml='';
+if(photoOn&&photoURL){
+var cls=(m.group==='fr')?'cv-photo-round':'cv-photo';
+photoHtml='<img class="'+cls+'" src="'+photoURL+'" alt="Photo">';
+}
+var html='<div class="'+m.cls+'">';
+if(m.group==='fr'){
+html+='<p class="cv-name">'+esc(nom)+'</p><div class="cv-double"></div>';
+html+='<div class="cv-under"><div><b>'+esc(metier)+'</b>'+(civil.length?'<br>'+civil.join(' • '):'')+'</div><div class="right">'+contacts.join('<br>')+'</div></div>';
+if(photoHtml) html+='<div style="text-align:right;margin-top:8px">'+photoHtml+'</div>';
+}else if(m.group==='de'){
+html+='<div class="cv-under"><div><p class="cv-name" style="font-size:22px">'+esc(nom)+'</p>'+(civil.length?'<div><b>Persönliche Daten</b><br>'+civil.join('<br>')+'</div>':'')+'<div>'+contacts.join('<br>')+'</div></div><div>'+photoHtml+'</div></div>';
+}else{
+html+='<p class="cv-name" style="text-align:center">'+esc(nom)+'</p><p style="text-align:center">'+contacts.join(' | ')+'</p>';
+if(photoHtml) html+='<div style="text-align:center">'+photoHtml+'</div>';
+if(metier) html+='<p style="text-align:center"><b>'+esc(metier)+'</b></p>';
+}
+function sec(title,body){return body?'<h4>'+title+'</h4>'+body:'';}
+if(get('profil')) html+=sec(h.profil,'<p>'+esc(get('profil'))+'</p>');
+var comp=splitList(get('competences'));
+if(comp.length) html+=sec(h.comp,'<ul class="'+(m.group==='fr'?'cv-two':'')+'">'+comp.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>');
+if(get('competencesInfo')) html+=sec(h.info,'<p>'+esc(get('competencesInfo'))+'</p>');
+var exps=get('experiences').split('\n').filter(function(l){return l.trim();});
+if(exps.length){
+var rows='';
+if(m.group==='de'){
+rows='<table class="cv-table">'+exps.map(function(line){
+var p=line.split('|');var poste=p[0]?p[0].trim():'';var lieu=p[1]?p[1].trim():'';var per=p[2]?fmtPeriod(p[2].trim(),m.lang):'';var desc=p[3]?p[3].trim():'';
+return '<tr><td class="d">'+esc(per)+'</td><td><b>'+esc(poste.toUpperCase())+'</b>'+(lieu?' — '+esc(lieu):'')+(desc?'<br>• '+esc(desc):'')+'</td></tr>';
+}).join('')+'</table>';
+}else{
+rows=exps.map(function(line){
+var p=line.split('|');var poste=p[0]?p[0].trim():'';var lieu=p[1]?p[1].trim():'';var per=p[2]?fmtPeriod(p[2].trim(),m.lang):'';var desc=p[3]?p[3].trim():'';
+return '<p><b>'+esc(poste.toUpperCase())+'</b> '+(per?esc(per):'')+(lieu?'<br>'+esc(lieu):'')+(desc?'<br>• '+esc(desc):'')+'</p>';
+}).join('');
+}
+html+=sec(h.exp,rows);
+}
+var forms=get('formations').split('\n').filter(function(l){return l.trim();});
+if(forms.length){
+var frows='';
+if(m.group==='de'){
+frows='<table class="cv-table">'+forms.map(function(line){var p=line.split('|');return '<tr><td class="d">'+esc(p[2]?p[2].trim():'')+'</td><td><b>'+esc(p[0]?p[0].trim().toUpperCase():'')+'</b>'+(p[1]?'<br>'+esc(p[1].trim()):'')+'</td></tr>';}).join('')+'</table>';
+}else{
+frows=forms.map(function(line){var p=line.split('|');return '<p><b>'+esc(p[0]?p[0].trim().toUpperCase():'')+'</b>'+(p[2]?' , '+esc(p[2].trim()):'')+(p[1]?'<br>'+esc(p[1].trim()):'')+'</p>';}).join('');
+}
+html+=sec(h.form,frows);
+}
+var langs=splitList(get('langues'));
+if(langs.length) html+=sec(h.lang,langs.map(langBar).join(''));
+var inter=splitList(get('interets'));
+if(inter.length) html+=sec(h.inter,'<ul>'+inter.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>');
+if(get('certifications')) html+=sec(h.cert,'<p>'+esc(get('certifications'))+'</p>');
+if(m.group==='de'){
+var today=new Date();var d=today.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+html+='<div class="sig"><span>'+esc(get('ville')||'Berlin')+', '+d+'</span><span>Unterschrift : ___________________</span></div>';
+}
+html+='</div>';
+document.getElementById('cvSheet').innerHTML=html;
+}
+function shareWA(){
+var t='Voici mon CV professionnel, créé avec Mon Dossier Pro. (Pense à joindre le fichier de CV téléchargé.)';
+window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+}
+function translateOne(text,target){
+var url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=fr|'+target;
+return fetch(url).then(function(r){return r.json();}).then(function(j){
+var out=j&&j.responseData?j.responseData.translatedText:'';
+if(!out||out.indexOf('MYMEMORY WARNING')>-1||out.indexOf('QUERY LENGTH')>-1) return null;
+if(out.trim().toLowerCase()===text.trim().toLowerCase()) return null;
+return out;
+}).catch(function(){return null;});
+}
+function langNameMap(name,target){
+var dict={'français':{en:'French',de:'Französisch'},'anglais':{en:'English',de:'Englisch'},'allemand':{en:'German',de:'Deutsch'},'espagnol':{en:'Spanish',de:'Spanisch'},'éwé':{en:'Ewe',de:'Ewe'},'kabiyé':{en:'Kabye',de:'Kabye'}};
+var k=name.trim().toLowerCase();return (dict[k]&&dict[k][target])?dict[k][target]:name;
+}
+async function improveOrTranslate(){
+var m=model();var warn=document.getElementById('tradWarn');warn.style.display='none';warn.innerHTML='';
+if(m.lang==='fr'||m.group==='ca'){
+set('experiences',improveFrField(get('experiences')));
+set('profil',improveFr(get('profil')));
+render();return;
+}
+var target=m.lang;var failures=[];
+var btn=document.getElementById('btnImprove');var old=btn.textContent;btn.textContent='Traduction en cours…';
+async function trField(id,fn){
+var v=get(id);if(!v) return;
+var out=await translateOne(v,target);
+if(out===null){failures.push(v);return;}
+set(id,fn?fn(out):out);
+}
+await trField('metier');
+await trField('profil');
+var exps=get('experiences').split('\n');
+var newExps=[];
+for(var i=0;i<exps.length;i++){
+var line=exps[i];if(!line.trim()){newExps.push(line);continue;}
+var p=line.split('|');
+if(p[0]){var t0=await translateOne(p[0].trim(),target);if(t0===null) failures.push(p[0].trim()); else p[0]=' '+t0+' ';}
+if(p[3]){var t3=await translateOne(p[3].trim(),target);if(t3===null) failures.push(p[3].trim()); else p[3]=' '+t3+' ';}
+newExps.push(p.join(' | '));
+}
+set('experiences',newExps.join('\n'));
+var forms=get('formations').split('\n');var newForms=[];
+for(var j=0;j<forms.length;j++){
+var fl=forms[j];if(!fl.trim()){newForms.push(fl);continue;}
+var fp=fl.split('|');
+if(fp[0]){var tf=await translateOne(fp[0].trim(),target);if(tf===null) failures.push(fp[0].trim()); else fp[0]=' '+tf+' ';}
+newForms.push(fp.join(' | '));
+}
+set('formations',newForms.join('\n'));
+async function trList(id){
+var items=splitList(get(id));var out=[];
+for(var k=0;k<items.length;k++){
+var it=items[k];var base=it.split(':')[0];
+var t=await translateOne(it,target);
+if(t===null) failures.push(it); else out.push(t);
+}
+set(id,out.join(', '));
+}
+await trList('competences');await trList('interets');await trList('certifications');
+var langs=splitList(get('langues'));var newLangs=langs.map(function(l){
+var parts=l.split(':');var nm=langNameMap(parts[0],target);
+return parts[1]?nm+' :'+parts.slice(1).join(':'):nm;
+});set('langues',newLangs.join(', '));
+var post=(target==='en')?improveEn:improveDe;
+set('profil',post(get('profil')));
+set('experiences',get('experiences').split('\n').map(function(line){
+if(line.indexOf('|')>-1){var p=line.split('|');if(p[3]) p[3]=' '+post(p[3].trim());return p.join(' | ');}return line;
+}).join('\n'));
+btn.textContent=old;
+if(failures.length){
+warn.style.display='block';
+warn.innerHTML='<b>Attention : traduction incomplète — ce CV n\u2019est pas fini.</b><br>Les phrases suivantes n\u2019ont pas été traduites et sont restées en français dans le formulaire :<ul>'+failures.map(function(f){return '<li>'+esc(f)+'</li>';}).join('')+'</ul>Vérifie ta connexion, puis retouche le bouton, ou traduis ces phrases à la main.';
+}
+render();
+}
+document.getElementById('photoFile').addEventListener('change',function(e){
+var f=e.target.files[0];if(!f) return;
+var r=new FileReader();r.onload=function(){photoURL=r.result;render();};r.readAsDataURL(f);
+});
+['nom','metier','tel','email','ville','linkedin','naissanceDate','naissanceLieu','nationalite','situation','profil','experiences','formations','competences','competencesInfo','langues','interets','certifications'].forEach(function(id){
+var el=document.getElementById(id);if(el) el.addEventListener('input',render);
+});
+renderGallery();updateModelUI();fillExample();
+</script>
+</body>
+</html>
