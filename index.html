@@ -58,6 +58,8 @@ main{max-width:none;padding:0}#cvSheet{padding:0;box-shadow:none;min-height:0}
 <main>
 <div class="card no-print">
 <h2>1. Choisis ton modèle</h2>
+<label>Choisis dans la liste (si le clic sur une carte ne marche pas chez toi, cette liste marche toujours)</label>
+<select id="modelSelect" onchange="selectModel(this.value)"></select>
 <div class="grid" id="gallery"></div>
 <div id="modelNote" class="note"></div>
 </div>
@@ -103,14 +105,14 @@ main{max-width:none;padding:0}#cvSheet{padding:0;box-shadow:none;min-height:0}
 <div class="note"><b>Création et aperçu gratuits.</b> Pour recevoir le PDF final (impression ou envoi par email) : 1 000 F, par Flooz ou TMoney, vérifié à la main avant envoi. Version d'essai gratuite, sans verrouillage technique.</div>
 </div>
 
-<div class="card no-print"><h2>3. Aperçu</h2><p style="font-size:13px;color:#444">Vérifie ton CV ci-dessous avant de le télécharger.</p></div>
+<div class="card no-print"><h2>3. Aperçu</h2><p id="previewModel" style="font-weight:bold;margin:6px 0"></p><p style="font-size:13px;color:#444">Vérifie ton CV ci-dessous avant de le télécharger.</p></div>
 <div class="card" id="cvSheet"></div>
 
 <div class="card no-print">
 <button type="button" onclick="window.print()">Télécharger en PDF</button>
 <p style="font-size:14px"><b>Sur iPhone, dans Safari :</b> touche le bouton, puis dans le menu Partager choisis <b>Imprimer</b>, puis <b>Enregistrer dans Fichiers</b> / <b>Enregistrer au format PDF</b>. Vérifie ensuite le fichier dans Fichiers / Téléchargements.</p>
-<button type="button" class="wa" onclick="shareWA()">Partager sur WhatsApp</button>
-<p style="font-size:13px;color:#444">WhatsApp ne peut pas joindre un fichier tout seul : il envoie seulement un texte. Télécharge d'abord ton PDF, puis dans WhatsApp touche + puis Document et joins le PDF téléchargé.</p>
+<button type="button" class="wa" id="btnWA" onclick="sharePDFWA()">Envoyer le PDF sur WhatsApp</button>
+<p id="waStatus" style="font-size:13px;color:#444">Ce bouton envoie le vrai fichier PDF : sur iPhone, choisis WhatsApp dans la fenêtre de partage qui s'ouvre, puis ton contact. Le PDF arrive en document, pas en note. Si ton téléphone ne permet pas le partage de fichier, le PDF se télécharge à la place : ouvre-le ensuite dans WhatsApp avec + puis Document.</p>
 </div>
 </main>
 <footer class="no-print">Mon Dossier Pro CV — Création et aperçu gratuits, 1 000 F pour le PDF final après paiement vérifié. La traduction, quand elle est utilisée, passe par le service externe gratuit MyMemory quand la connexion le permet. Les données d'exemple sont fictives.</footer>
@@ -149,16 +151,28 @@ function get(id){return document.getElementById(id).value;}
 function set(id,v){document.getElementById(id).value=v||'';}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function setPhotoChoice(v){photoOn=v;document.getElementById('photoFile').style.display=v?'block':'none';render();}
+function selectModel(id){
+if(!MODELS.filter(function(m){return m.id===id;}).length) return;
+cur=id;renderGallery();updateModelUI();render();
+}
 function renderGallery(){
 var g=document.getElementById('gallery');g.innerHTML='';
 MODELS.forEach(function(m){
 var d=document.createElement('div');d.className='model'+(m.id===cur?' sel':'');d.innerHTML='<b>'+esc(m.name)+'</b><span>'+esc(m.desc)+'</span>';
-d.onclick=function(){cur=m.id;updateModelUI();render();};g.appendChild(d);
+d.onclick=function(){selectModel(m.id);};g.appendChild(d);
 });
+var sel=document.getElementById('modelSelect');
+if(sel){
+if(!sel.options.length){
+MODELS.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.name;sel.appendChild(o);});
+}
+sel.value=cur;
+}
 }
 function updateModelUI(){
 var m=model();var grp=m.group;
-document.getElementById('modelNote').textContent=NOTES[grp]||'';
+document.getElementById('modelNote').textContent=(grp==='us'?NOTES.en:NOTES[grp])||'';
+var pm=document.getElementById('previewModel');if(pm) pm.textContent='Modèle sélectionné : '+m.name;
 document.getElementById('civilFields').style.display=(grp==='fr'||grp==='de')?'block':'none';
 document.getElementById('tradNote').style.display=(m.lang==='en'||m.lang==='de')?'block':'none';
 document.getElementById('btnImprove').textContent=(m.lang==='en'||m.lang==='de')?'Traduire et améliorer':'Améliorer mon texte';
@@ -223,7 +237,7 @@ return '<div><b>'+esc(name)+'</b> '+(lvl?esc(lvl)+' — '+esc(label):'')+'<div c
 }
 function splitList(v){return v.split(/[\n,]+/).map(function(x){return x.trim();}).filter(Boolean);}
 function render(){
-var m=model();var h=HEADINGS[m.group]||HEADINGS.fr;
+var m=model();var h=(m.group==='us'?HEADINGS.en:HEADINGS[m.group])||HEADINGS.fr;
 var nom=get('nom'),metier=get('metier');
 var contacts=[];
 if(get('ville')) contacts.push(esc(get('ville')));
@@ -294,9 +308,286 @@ html+='<div class="sig"><span>'+esc(get('ville')||'Berlin')+', '+d+'</span><span
 html+='</div>';
 document.getElementById('cvSheet').innerHTML=html;
 }
-function shareWA(){
-var t='Voici mon CV professionnel, créé avec Mon Dossier Pro. (Pense à joindre le fichier de CV téléchargé.)';
-window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+/* ---- PDF WhatsApp v4 : génère un vrai fichier PDF, sans librairie externe,
+   puis l'envoie en pièce jointe via la fenêtre de partage du téléphone.
+   L'ancien bouton wa.me n'envoyait qu'un texte : c'est pour ça que le
+   destinataire recevait une note, pas un PDF. ---- */
+function pdfClean(s){
+var t=String(s||'');
+var rep={'\u2019':"'",'\u2018':"'",'\u201c':'"','\u201d':'"','\u2013':'-','\u2014':'-','\u2026':'...','\u00a0':' '};
+Object.keys(rep).forEach(function(k){t=t.split(k).join(rep[k]);});
+var tr={'\u025b':'e','\u0254':'o','\u014b':'n','\u0256':'d'};
+Object.keys(tr).forEach(function(k){t=t.split(k).join(tr[k]);});
+return t.replace(/[^\x20-\x7e\xa0-\xff]/g,'?');
+}
+function pdfEsc(s){
+return pdfClean(s).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+}
+var PDFW={32:278,33:278,34:355,35:556,36:556,37:889,38:667,39:222,40:333,41:333,42:389,43:584,44:278,45:333,46:278,47:278,48:556,49:556,50:556,51:556,52:556,53:556,54:556,55:556,56:556,57:556,58:278,59:278,60:584,61:584,62:584,63:556,64:1015,65:667,66:667,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:500,75:667,76:556,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,91:278,92:278,93:278,94:469,95:556,96:333,97:556,98:556,99:500,100:556,101:556,102:278,103:556,104:556,105:222,106:222,107:500,108:222,109:833,110:556,111:556,112:556,113:556,114:333,115:500,116:278,117:556,118:500,119:722,120:500,121:500,122:500,123:334,124:260,125:334,126:584};
+function pdfTextWidth(s,size,bold){
+var w=0;var t=pdfClean(s);
+for(var i=0;i<t.length;i++){
+var c=t.charCodeAt(i);
+var base=PDFW[c];
+if(base===undefined){
+if(c>=192&&c<=255){var ch=t.charAt(i).toLowerCase();base=PDFW[ch.charCodeAt(0)]||556;}
+else base=556;
+}
+w+=base;
+}
+return w*size/1000*(bold?1.05:1);
+}
+function pdfWrap(text,maxW,size,bold){
+var words=pdfClean(text).split(/\s+/).filter(Boolean);var lines=[];var cur='';
+words.forEach(function(wd){
+var trial=cur?cur+' '+wd:wd;
+if(pdfTextWidth(trial,size,bold)<=maxW||!cur){cur=trial;}else{lines.push(cur);cur=wd;}
+});
+if(cur) lines.push(cur);
+return lines.length?lines:[''];
+}
+function pdfColor(rgb){return (rgb[0]/255).toFixed(3)+' '+(rgb[1]/255).toFixed(3)+' '+(rgb[2]/255).toFixed(3);}
+/* Construit un PDF A4 à partir du formulaire. Retourne un Blob, ou null si le CV est vide. */
+function buildCVPdf(photo){
+var m=model();var h=HEADINGS[m.group]||HEADINGS.fr;
+var headColor=[0,0,0];
+if(m.id==='fr-moderne') headColor=[15,118,110];
+if(m.id==='ca-pro') headColor=[37,99,235];
+if(m.id==='us-creatif') headColor=[185,28,28];
+var PW=595,PH=842,MG=42,CW=PW-2*MG;
+var pages=[];var stream='';var y=MG;
+var photoW=0,photoH=0;
+if(photo&&photo.width&&photo.height){photoW=85;photoH=Math.min(110,85*photo.height/photo.width);}
+var textW=photoW?CW-photoW-14:CW;
+function newPage(){pages.push(stream);stream='';y=MG;}
+function ensure(need){if(y+need>PH-MG) newPage();}
+function txt(x,yt,s,size,bold,rgb){
+stream+='BT /'+(bold?'F2':'F1')+' '+size+' Tf '+pdfColor(rgb||[0,0,0])+' rg '+(x).toFixed(1)+' '+(PH-yt).toFixed(1)+' Td ('+pdfEsc(s)+') Tj ET\n';
+}
+function wrapped(x,yt,s,size,bold,maxW){
+var lines=pdfWrap(s,maxW,size,bold);var yy=yt;
+lines.forEach(function(ln){txt(x,yy,ln,size,bold);yy+=size*1.35;});
+return yy;
+}
+function rule(yt,rgb){
+stream+=pdfColor(rgb||[0,0,0])+' rg '+MG.toFixed(1)+' '+(PH-yt-1).toFixed(1)+' '+CW.toFixed(1)+' 0.7 re f\n';
+}
+function section(title){
+ensure(28);txt(MG,y,title.toUpperCase(),12,true,headColor);y+=6;rule(y,headColor);y+=16;
+}
+function para(s,size){
+if(!s) return;ensure(20);y=wrapped(MG,y,s,size||11,false,CW)+4;
+}
+function bullets(items){
+items.forEach(function(it){
+ensure(18);var lines=pdfWrap(it,CW-14,11,false);var yy=y;
+lines.forEach(function(ln,idx){txt(MG+(idx===0?0:14),yy,idx===0?'- '+ln:ln,11,false);yy+=15;});
+y=yy+2;
+});
+}
+/* En-tête : nom seul, puis deux traits, comme sur l'aperçu francophone */
+var nom=get('nom');
+if(photo&&photoW){
+var px=PW-MG-photoW,py=MG;
+stream+='q '+photoW.toFixed(1)+' 0 0 '+photoH.toFixed(1)+' '+px.toFixed(1)+' '+(PH-py-photoH).toFixed(1)+' cm /Im1 Do Q\n';
+}
+if(nom){ensure(30);y=wrapped(MG,y,nom.toUpperCase(),22,true,textW)+2;}
+stream+= '0 0 0 rg '+MG.toFixed(1)+' '+(PH-y-3).toFixed(1)+' '+CW.toFixed(1)+' 3 re f\n';y+=5;
+stream+= '0 0 0 rg '+MG.toFixed(1)+' '+(PH-y-1).toFixed(1)+' '+CW.toFixed(1)+' 0.7 re f\n';y+=14;
+if(get('metier')){txt(MG,y,get('metier'),12,true);y+=18;}
+var contacts=[];
+if(get('ville')) contacts.push(get('ville'));
+if(get('tel')) contacts.push(get('tel'));
+if(get('email')) contacts.push(get('email'));
+if(get('linkedin')) contacts.push(get('linkedin'));
+if(contacts.length){y=wrapped(MG,y,contacts.join(' - '),10,false,textW)+2;}
+var civil=[];
+if((m.group==='fr'||m.group==='de')&&get('naissanceDate')) civil.push((m.lang==='de'?'Geburtsdatum: ':'Ne(e) le ')+get('naissanceDate')+(get('naissanceLieu')?' '+(m.lang==='de'?'in ':'a ')+get('naissanceLieu'):''));
+if((m.group==='fr'||m.group==='de')&&get('nationalite')) civil.push((m.lang==='de'?'Staatsangehoerigkeit: ':'Nationalite : ')+get('nationalite'));
+if((m.group==='fr'||m.group==='de')&&get('situation')) civil.push(get('situation'));
+civil.forEach(function(c){txt(MG,y,c,10,false);y+=14;});
+if(photoW&&y<MG+photoH+8) y=MG+photoH+8;
+y+=8;
+if(get('profil')){section(h.profil);para(get('profil'));}
+var comp=splitList(get('competences'));
+if(comp.length){section(h.comp);bullets(comp);}
+if(get('competencesInfo')){section(h.info);para(get('competencesInfo'));}
+var exps=get('experiences').split('\n').filter(function(l){return l.trim();});
+if(exps.length){
+section(h.exp);
+exps.forEach(function(line){
+var p=line.split('|');var poste=(p[0]||'').trim();var lieu=(p[1]||'').trim();var per=p[2]?fmtPeriod(p[2].trim(),m.lang):'';var desc=(p[3]||'').trim();
+ensure(34);
+if(m.group==='de'){
+txt(MG,y,per,10,true);var yy=wrapped(MG+140,y,(poste?poste.toUpperCase():'')+(lieu?' - '+lieu:''),11,true,CW-140);
+if(desc) yy=wrapped(MG+140,yy+1,'- '+desc,11,false,CW-140);
+y=yy+6;
+}else{
+if(poste){y=wrapped(MG,y,poste.toUpperCase(),11,true,CW)+1;}
+if(per||lieu){txt(MG,y,[per,lieu].filter(Boolean).join(' - '),10,false);y+=14;}
+if(desc){y=wrapped(MG,y,'- '+desc,11,false,CW)+2;}
+y+=4;
+}
+});
+}
+var forms=get('formations').split('\n').filter(function(l){return l.trim();});
+if(forms.length){
+section(h.form);
+forms.forEach(function(line){
+var p=line.split('|');var dip=(p[0]||'').trim();var eco=(p[1]||'').trim();var an=(p[2]||'').trim();
+ensure(30);
+if(m.group==='de'){
+txt(MG,y,an,10,true);y=wrapped(MG+140,y,(dip?dip.toUpperCase():'')+(eco?' - '+eco:''),11,true,CW-140)+6;
+}else{
+if(dip){y=wrapped(MG,y,dip.toUpperCase(),11,true,CW)+1;}
+if(an||eco){txt(MG,y,[an,eco].filter(Boolean).join(' - '),10,false);y+=14;}
+y+=4;
+}
+});
+}
+var langs=splitList(get('langues'));
+if(langs.length){
+section(h.lang);
+langs.forEach(function(it){
+ensure(30);var lvl='';var mm=it.match(/(A1|A2|B1|B2|C1|C2)/);if(mm) lvl=mm[1];
+var nm=it.replace(/:.*$/,'').trim();
+txt(MG,y,nm+(lvl?' : '+lvl:''),11,false);y+=15;
+var words={A1:1,A2:2,B1:3,B2:4,C1:5,C2:6};var n=words[lvl]||3;
+for(var i=1;i<=6;i++){
+var filled=i<=n;var bx=MG+(i-1)*21;
+stream+=(filled?'0 0 0':'0.85 0.85 0.85')+' rg '+bx.toFixed(1)+' '+(PH-y-7).toFixed(1)+' 18 7 re f\n';
+}
+y+=14;
+});
+}
+var inter=splitList(get('interets'));
+if(inter.length){section(h.inter);bullets(inter);}
+if(get('certifications')){section(h.cert);para(get('certifications'));}
+if(m.group==='de'){
+ensure(30);var today=new Date();var d=today.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+txt(MG,y,(get('ville')||'Berlin')+', '+d,11,false);txt(PW-MG-230,y,'Unterschrift : ___________________',11,false);y+=16;
+}
+pages.push(stream);
+/* Assemblage PDF */
+function strBytes(s){var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i)&255;return a;}
+var nPages=pages.length;
+var pageIds=[];for(var pi=0;pi<nPages;pi++) pageIds.push(3+pi*2);
+var fontR=3+nPages*2,fontB=fontR+1,imgId=photo?fontB+1:0;
+var totalObjs=photo?imgId:fontB;
+var objs=[]; /* {id, head:string, body:Uint8Array|string, isStream} */
+function addObj(id,head,body){objs.push({id:id,head:head,body:body});}
+var kids=pageIds.map(function(id){return id+' 0 R';}).join(' ');
+addObj(1,'<< /Type /Catalog /Pages 2 0 R >>','');
+addObj(2,'<< /Type /Pages /Kids ['+kids+'] /Count '+nPages+' >>','');
+for(var pj=0;pj<nPages;pj++){
+var res='<< /Font << /F1 '+fontR+' 0 R /F2 '+fontB+' 0 R >>'+(photo?' /XObject << /Im1 '+imgId+' 0 R >>':'')+' >>';
+addObj(pageIds[pj],'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources '+res+' /Contents '+(pageIds[pj]+1)+' 0 R >>','');
+addObj(pageIds[pj]+1,'<< /Length '+pages[pj].length+' >>\nstream\n'+pages[pj]+'endstream','');
+}
+addObj(fontR,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>','');
+addObj(fontB,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>','');
+if(photo){
+objs.push({id:imgId,head:'<< /Type /XObject /Subtype /Image /Width '+photo.width+' /Height '+photo.height+' /ColorSpace '+(photo.gray?'/DeviceGray':'/DeviceRGB')+' /BitsPerComponent 8 /Filter /DCTDecode /Length '+photo.bytes.length+' >>\nstream\n',body:photo.bytes,tail:'\nendstream'});
+}
+objs.sort(function(a,b){return a.id-b.id;});
+var chunks=[];var offsets={};var total=0;
+function pushBytes(b){chunks.push(b);total+=b.length;}
+function pushStr(s){pushBytes(strBytes(s));}
+pushStr('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
+objs.forEach(function(o){
+offsets[o.id]=total;
+pushStr(o.id+' 0 obj\n'+o.head+'\n');
+if(o.body){
+if(typeof o.body==='string') pushStr(o.body);
+else pushBytes(o.body);
+if(o.tail) pushStr(o.tail);
+}
+pushStr('\nendobj\n');
+});
+var xrefPos=total;
+var xref='xref\n0 '+(totalObjs+1)+'\n0000000000 65535 f \n';
+for(var oi=1;oi<=totalObjs;oi++){
+var off=offsets[oi]||0;xref+=('0000000000'+off).slice(-10)+' 00000 n \n';
+}
+xref+='trailer\n<< /Size '+(totalObjs+1)+' /Root 1 0 R >>\nstartxref\n'+xrefPos+'\n%%EOF\n';
+pushStr(xref);
+var all=new Uint8Array(total);var pos=0;
+chunks.forEach(function(c){all.set(c,pos);pos+=c.length;});
+return new Blob([all],{type:'application/pdf'});
+}
+function jpegInfo(bytes){
+var i=2;
+while(i+9<bytes.length){
+if(bytes[i]!==0xFF){i++;continue;}
+var mk=bytes[i+1];
+if(mk===0xD8||mk===0x01||(mk>=0xD0&&mk<=0xD7)){i+=2;continue;}
+var len=(bytes[i+2]<<8)+bytes[i+3];
+if(mk===0xC0||mk===0xC1||mk===0xC2){
+return {width:(bytes[i+7]<<8)+bytes[i+8],height:(bytes[i+5]<<8)+bytes[i+6],gray:bytes[i+9]===1};
+}
+i+=2+len;
+}
+return null;
+}
+function dataUrlToBytes(url){
+var b64=url.split(',')[1]||'';var bin=atob(b64);var a=new Uint8Array(bin.length);
+for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
+return a;
+}
+function preparePhotoJpeg(){
+return new Promise(function(resolve){
+if(!photoOn||!photoURL){resolve(null);return;}
+if(photoURL.indexOf('data:image/jpeg')===0){
+try{var b=dataUrlToBytes(photoURL);var info=jpegInfo(b);resolve(info?{bytes:b,width:info.width,height:info.height,gray:info.gray}:null);}catch(e){resolve(null);}
+return;
+}
+var img=new Image();
+img.onload=function(){
+try{
+var cv=document.createElement('canvas');cv.width=img.naturalWidth||img.width;cv.height=img.naturalHeight||img.height;
+var ctx=cv.getContext('2d');ctx.drawImage(img,0,0);
+var jpg=cv.toDataURL('image/jpeg',0.85);var b2=dataUrlToBytes(jpg);var info2=jpegInfo(b2);
+resolve(info2?{bytes:b2,width:info2.width,height:info2.height,gray:info2.gray}:null);
+}catch(e){resolve(null);}
+};
+img.onerror=function(){resolve(null);};
+img.src=photoURL;
+});
+}
+async function sharePDFWA(){
+var status=document.getElementById('waStatus');var btn=document.getElementById('btnWA');
+var old=status?status.textContent:'';
+function setStatus(t){if(status) status.textContent=t;}
+if(!get('nom')&&!get('profil')&&!get('experiences')){
+setStatus('Remplis au moins ton nom avant d\u2019envoyer le PDF.');
+return;
+}
+if(btn) btn.textContent='Préparation du PDF…';
+setStatus('Préparation du PDF…');
+try{
+var photo=await preparePhotoJpeg();
+var blob=buildCVPdf(photo);
+var safe=(get('nom')||'Mon-Dossier-Pro').replace(/[^A-Za-z0-9\-_]+/g,'-').replace(/-+/g,'-').slice(0,40)||'CV';
+var filename='CV-'+safe+'.pdf';
+var file=new File([blob],filename,{type:'application/pdf'});
+if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+await navigator.share({files:[file],title:'Mon CV professionnel',text:'Voici mon CV professionnel.'});
+setStatus('Fenêtre de partage ouverte : choisis WhatsApp, puis ton contact. Le PDF part en document, pas en note.');
+}else{
+var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();
+setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+setStatus('Partage de fichier non disponible sur ce téléphone : le PDF a été téléchargé. Ouvre WhatsApp, choisis ton contact, touche + puis Document, et joins le PDF.');
+}
+}catch(e){
+if(e&&e.name==='AbortError'){setStatus('Partage annulé, rien n\u2019a été envoyé.');}
+else{
+try{
+var blob2=buildCVPdf(null);var a2=document.createElement('a');a2.href=URL.createObjectURL(blob2);a2.download='CV.pdf';document.body.appendChild(a2);a2.click();a2.remove();
+setStatus('Le partage direct n\u2019a pas marché : le PDF a été téléchargé. Joins-le dans WhatsApp avec + puis Document.');
+}catch(e2){setStatus('Impossible de préparer le PDF. Essaie le bouton « Télécharger en PDF » ci-dessus.');}
+}
+}
+if(btn) btn.textContent='Envoyer le PDF sur WhatsApp';
 }
 function translateOne(text,target){
 var url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=fr|'+target;
