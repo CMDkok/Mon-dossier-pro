@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://cmdkok.github.io/Mon-dossier-pro/sitemap.xml
